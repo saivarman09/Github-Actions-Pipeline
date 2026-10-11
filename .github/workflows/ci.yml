@@ -1,5 +1,5 @@
 
-name: Python CI Pipeline
+name: Stage 2 - Quality and Security
 
 on:
   push:
@@ -11,12 +11,12 @@ permissions:
   contents: read
 
 jobs:
-  test:
-    name: Build and Test
+  quality-security-test:
+    name: Quality, Security and Tests
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout source code
+      - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Set up Python
@@ -29,8 +29,14 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
+      - name: Lint Python code
+        run: ruff check .
+
+      - name: Audit dependencies
+        run: pip-audit -r requirements.txt
+
       - name: Run application
         run: python app.py
 
       - name: Run automated tests
-        run: pytest -v
+        run: python -m pytest -v
