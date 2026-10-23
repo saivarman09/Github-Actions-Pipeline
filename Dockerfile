@@ -1,6 +1,9 @@
 # 1. Use a lightweight Python base image
 FROM python:3.12-slim
-
+# Update OS packages to receive available security fixes
+RUN apt-get update \
+    && apt-get upgrade -y \
+    && rm -rf /var/lib/apt/lists/*
 # 2. Configure Python for container execution
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1
