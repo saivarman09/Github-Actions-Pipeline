@@ -46,13 +46,30 @@ jobs:
       - name: Run automated tests
         run: python -m pytest -v
 
-      # 7. Build the Docker image
+      # 7. Set up Docker Buildx
+      - name: Verify Docker installation
+        run: |
+          docker --version
+          docker info
+          docker buildx version
+
+      # 8. Build the Docker image
       - name: Build Docker image
         run: |
           docker build \
             -t devops-python-app:${{ github.sha }} .
 
-      # 8. Test the Docker container
+      # 9. Scan Docker image with Trivy
+      - name: Scan Docker image with Trivy
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+            image-ref: devops-python-app:${{ github.sha }}
+            format: table
+            vuln-type: os,library
+            severity: CRITICAL,HIGH
+            exit-code: '1'
+
+      # 10. Test the Docker container
       - name: Test Docker container
         run: |
           docker run --rm devops-python-app:${{ github.sha }}
