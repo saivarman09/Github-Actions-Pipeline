@@ -1,5 +1,5 @@
 
-name: Stage 2 - Quality and Security
+name: Stage - Quality, Security and Docker
 
 on:
   push:
@@ -11,32 +11,48 @@ permissions:
   contents: read
 
 jobs:
-  quality-security-test:
-    name: Quality, Security and Tests
+  quality-security-test-docker:
+    name: Quality, Security, Tests and Docker
     runs-on: ubuntu-latest
 
     steps:
+      # 1. Get the source code
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      # 2. Configure Python
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+          cache: "pip"
+          cache-dependency-path: requirements.txt
 
+      # 3. Install project dependencies and tools
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
+          python -m pip install -r requirements.txt
 
+      # 4. Check code quality
       - name: Lint Python code
-        run: ruff check .
+        run: python -m ruff check .
 
+      # 5. Scan dependencies for known vulnerabilities
       - name: Audit dependencies
-        run: pip-audit -r requirements.txt
+        run: python -m pip_audit -r requirements.txt
 
-      - name: Run application
-        run: python app.py
-
+      # 6. Run automated tests
       - name: Run automated tests
         run: python -m pytest -v
+
+      # 7. Build the Docker image
+      - name: Build Docker image
+        run: |
+          docker build \
+            -t devops-python-app:${{ github.sha }} .
+
+      # 8. Test the Docker container
+      - name: Test Docker container
+        run: |
+          docker run --rm devops-python-app:${{ github.sha }}
